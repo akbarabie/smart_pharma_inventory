@@ -33,7 +33,7 @@ st.divider()
 
 kol_kiri, kol_kanan = st.columns(2)
 with kol_kiri:
-    st.subheader("Untuk Tim Data Scientist")
+    st.subheader("Data Scientist")
     st.markdown(
         "- **Forecast Demand**, bandingkan hasil prediksi Prophet dengan "
         "histori aktual per kombinasi obat-gudang\n"
@@ -41,7 +41,7 @@ with kol_kiri:
         "dan catatan evaluasinya"
     )
 with kol_kanan:
-    st.subheader("Untuk Tim Procurement (Data Analyst)")
+    st.subheader("Procurement (Data Analyst)")
     st.markdown(
         "- **Dashboard**, ringkasan KPI operasional dengan filter gudang "
         "dan rentang tanggal\n"
