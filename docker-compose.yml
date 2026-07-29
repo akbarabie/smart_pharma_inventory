@@ -1,0 +1,143 @@
+# docker-compose.yml
+#
+# CATATAN PENTING yang sering bikin bingung: di sini ada service "postgres-airflow",
+# tapi itu BUKAN Postgres gold layer/warehouse project kita.
+#
+# Ada dua Postgres yang perannya beda total:
+#   1. postgres-airflow (service di bawah ini)
+#      -> database internal milik Airflow sendiri, cuma nyimpen metadata
+#         seperti riwayat run DAG, status task, user login Airflow.
+#         Jalan lokal di laptop masing-masing, boleh hilang/direset kapan saja
+#         tanpa mempengaruhi data bisnis kita.
+#   2. Postgres GOLD/SILVER project (Supabase/Neon, DI LUAR compose ini)
+#      -> ini warehouse asli yang isinya dim_obat, fact_stock_movement, dst.
+#         Sengaja di-hosting terpisah (bukan container di sini) karena harus
+#         bisa diakses bertiga (DE, DS, DA) dari laptop masing-masing secara
+#         bersamaan. Connection string-nya diisi di .env sebagai GOLD_DATABASE_URL.
+
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: docker/airflow/Dockerfile
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER}:${POSTGRES_AIRFLOW_PASSWORD}@postgres-airflow/${POSTGRES_AIRFLOW_DB}
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW_FERNET_KEY}
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "false"
+    # connection string ke Postgres GOLD/SILVER hosted, dipakai task-task transform
+    GOLD_DATABASE_URL: ${GOLD_DATABASE_URL}
+    # kredensial MinIO, dipakai task extractor untuk menulis ke bronze layer
+    MINIO_ENDPOINT: minio:9000
+    MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+    MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+    GEMINI_API_KEY: ${GEMINI_API_KEY}
+    GEMINI_MODEL: ${GEMINI_MODEL}
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./extractors:/opt/airflow/extractors
+    - ./data_quality:/opt/airflow/data_quality
+    - ./transform:/opt/airflow/transform
+    - ./data:/opt/airflow/data
+    - ./logs:/opt/airflow/logs
+    - ./models:/opt/airflow/models
+    - ./agents:/opt/airflow/agents
+  depends_on:
+    postgres-airflow:
+      condition: service_healthy
+  user: "${AIRFLOW_UID:-50000}:0"
+
+services:
+  # --- Database internal Airflow (BUKAN warehouse project) ---
+  postgres-airflow:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_AIRFLOW_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_AIRFLOW_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_AIRFLOW_DB}
+    volumes:
+      - postgres-airflow-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_AIRFLOW_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Inisialisasi Airflow: migrasi schema metadata + bikin user admin ---
+  # Service ini jalan sekali lalu berhenti (exit code 0), memang begitu seharusnya.
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        if airflow users list | grep -q admin; then
+          echo "User admin sudah ada, tidak perlu dibuat ulang."
+        else
+          airflow users create \
+            --username admin \
+            --password admin \
+            --firstname Admin \
+            --lastname Bootcamp \
+            --role Admin \
+            --email akbarsuharbi@gmail.com
+        fi
+
+  # --- Web UI Airflow, buka di localhost:8080 ---
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # --- Scheduler, ini yang benar-benar menjalankan DAG sesuai jadwal ---
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  # --- MinIO, object storage untuk BRONZE layer (data mentah apa adanya) ---
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"   # API endpoint (dipakai boto3 dari extractor)
+      - "9001:9001"   # Console web, buka di localhost:9001
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Job sekali jalan: otomatis bikin bucket "bronze" begitu MinIO siap ---
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}; do sleep 1; done;
+      mc mb -p local/bronze;
+      echo 'Bucket bronze siap dipakai.';
+      exit 0;
+      "
+
+volumes:
+  postgres-airflow-data:
+  minio-data:

@@ -1,0 +1,31 @@
+# Environment & rahasia, jangan pernah masuk git
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Airflow
+logs/
+*.log
+
+# Data mentah hasil download manual, terlalu besar dan tidak perlu masuk git
+# (nanti kita simpan di MinIO/bronze, bukan di repo)
+data/raw/
+data/processed/
+
+# Laporan hasil validasi data quality, digenerate ulang tiap run
+data_quality/reports/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json

@@ -1,0 +1,16 @@
+# Dependency ini HANYA untuk kebutuhan task di dalam Airflow
+# (extractor, koneksi MinIO, koneksi Postgres, transformasi data).
+#
+# PENTING: sengaja TIDAK di-pin versi manual di sini. Versi persisnya
+# ditentukan oleh --constraint resmi Airflow di Dockerfile, supaya dijamin
+# kompatibel dengan dependency internal Airflow sendiri (lihat komentar
+# di Dockerfile untuk kronologi kenapa ini penting, ada insiden nyata
+# soal SQLAlchemy yang merusak Airflow gara-gara versi tidak dikunci).
+
+pandas
+requests
+openpyxl
+boto3
+psycopg2-binary
+python-dotenv
+great_expectations
