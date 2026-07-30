@@ -11,7 +11,7 @@ img = Image.open(BASE_DIR / "images" / "smart_pharma.png")
 st.image(img, use_container_width=True)
 st.caption(
     "Sistem peramalan stok, deteksi risiko kadaluwarsa, dan AI procurement "
-    "assistant untuk gudang obat vital."
+    "assistant untuk gudang obat esensial."
 )
 
 st.divider()

@@ -68,7 +68,7 @@ st.caption(
     "Model ini memang lemah (AUC mendekati acak). Fitur turunan lain "
     "(margin hari, posisi antrean FEFO) dan model berbasis pohon (XGBoost, "
     "LightGBM) sudah dicoba dan tidak membantu, dilaporkan sebagai "
-    "keterbatasan jujur, bukan disembunyikan. Kemungkinan besar outcome "
+    "keterbatasan model prediksi. Kemungkinan besar outcome "
     "waste di data simulasi ini didominasi variasi acak konsumsi harian, "
     "bukan pola batch yang bisa dipelajari."
 )

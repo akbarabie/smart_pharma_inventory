@@ -7,15 +7,7 @@ memanggil LLM (Google Gemini API) cuma untuk merangkai angka itu jadi
 narasi Bahasa Indonesia yang enak dibaca tim procurement. Hasilnya
 disimpan ke gold.agent_recommendations.
 
-Kenapa Gemini, bukan Claude/OpenAI seperti draft awal PRD: project ini
-tidak ada budget (final project bootcamp), sementara Claude API dan
-OpenAI API tidak punya tier gratis yang bisa diandalkan untuk pemakaian
-berkelanjutan. Google Gemini API menyediakan free tier resmi tanpa kartu
-kredit dengan limit yang jauh lebih dari cukup untuk kebutuhan project
-ini. Ini keputusan sadar, didokumentasikan di README sebagai deviasi
-dari draft PRD, bukan disembunyikan.
-
-Prinsip anti-halusinasi (wajib, sesuai PRD section 5.1): LLM CUMA
+Prinsip anti-halusinasi: LLM CUMA
 bertugas merangkai angka yang sudah dihitung program jadi narasi bahasa
 natural. Semua angka (SKU, sisa stok, hari menuju kadaluwarsa,
 probabilitas risiko, demand gudang lain) dan JENIS rekomendasi

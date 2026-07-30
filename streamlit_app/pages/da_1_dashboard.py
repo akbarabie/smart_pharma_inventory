@@ -73,7 +73,7 @@ kol1.metric(
 )
 kol2.metric(
     "Waste Rate Proyeksi", f"{waste_rate:.1f}%",
-    help="Persentase unit stok batch berjalan berkategori risiko Tinggi, dalam unit karena data harga di luar scope project (lihat keputusan LKPP)",
+    help="Persentase unit stok batch berjalan berkategori risiko Tinggi, dalam unit karena data harga di luar scope project",
 )
 kol3.metric("Batch Risiko Tinggi", jumlah_risiko_tinggi)
 

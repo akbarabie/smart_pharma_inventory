@@ -9,7 +9,7 @@ st.title("💡 Rekomendasi Procurement")
 st.caption(
     "Narasi rekomendasi dari Procurement Recommendation Generator. Jenis "
     "tindakan ditentukan lewat kode program berbasis angka aktual, LLM "
-    "cuma bertugas merangkai narasinya (prinsip anti-halusinasi PRD 5.1)."
+    "cuma bertugas merangkai narasinya."
 )
 
 daftar_gudang = ambil_daftar_gudang()
