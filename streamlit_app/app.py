@@ -28,6 +28,24 @@ halaman_dashboard = st.Page("pages/da_1_dashboard.py", title="Dashboard", icon="
 halaman_rekomendasi = st.Page("pages/da_2_rekomendasi.py", title="Rekomendasi", icon="💡")
 halaman_chatbot = st.Page("pages/da_3_tanya_jawab.py", title="Tanya Jawab", icon="💬")
 
+# Footer
+st.sidebar.markdown("---")
+st.sidebar.markdown(
+    """
+    <div style="
+        text-align:center;
+        color:#9CA3AF;
+        font-size:14px;
+        padding-top:10px;
+        padding-bottom:5px;
+    ">
+        <strong>Akbar, Fikri, Dani</strong><br>
+        Data & AI Professional
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 pg = st.navigation(
     {
         "": [halaman_beranda],
