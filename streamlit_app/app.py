@@ -10,7 +10,6 @@ bawaan Streamlit.
 
 import streamlit as st
 from style import css_kustom
-from PIL import Image
 from pathlib import Path
 
 st.set_page_config(
@@ -21,9 +20,14 @@ st.set_page_config(
 st.markdown(css_kustom(), unsafe_allow_html=True)
 
 # Logo di atas navigasi sidebar
-BASE_DIR = Path(__file__).resolve().parent.parent
-img = Image.open(BASE_DIR / "images" / "logo.png")
-st.logo(img, size="large")
+# BASE_DIR = folder streamlit_app/ (tempat app.py berada), sejajar dengan images/
+BASE_DIR = Path(__file__).resolve().parent
+LOGO_PATH = BASE_DIR / "images" / "logo.png"
+
+if LOGO_PATH.exists():
+    st.logo(str(LOGO_PATH), size="large")
+else:
+    st.sidebar.warning(f"Logo tidak ditemukan: {LOGO_PATH}")
 
 halaman_beranda = st.Page("pages/beranda.py", title="Beranda", icon="🏠", default=True)
 
